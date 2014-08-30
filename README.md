@@ -1,7 +1,7 @@
 libpcapev - libpcap helper using libevent
 =========================================
 
-### Example
+### Example: capture IP packets on any interfaces
 
 ```
 #include <sys/socket.h>
@@ -37,3 +37,4 @@ main(int argc, char *argv[])
 
 ### API
 
+See https://github.com/looran/libpcapev/blob/master/pcapev.h
