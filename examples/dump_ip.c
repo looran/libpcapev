@@ -1,9 +1,3 @@
-libpcapev - libpcap helper using libevent
-=========================================
-
-### Example
-
-```
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -33,7 +27,3 @@ main(int argc, char *argv[])
 	event_base_dispatch(evb);
 	pcapev_free(cap);
 }
-```
-
-### API
-
