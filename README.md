@@ -43,7 +43,7 @@ main(int argc, char *argv[])
 
 To test this:
 ```bash
-make -C examples/ && sudo ./examples/dump_tcp
+make -C examples/ && sudo ./examples/dump_ip
 ```
 
 ### API
