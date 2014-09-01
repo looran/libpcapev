@@ -1,7 +1,13 @@
 libpcapev - libpcap helper using libevent
 =========================================
 
-### Example
+### Install
+
+```bash
+make && sudo make install
+```
+
+### Example: capture IP packets on any interfaces
 
 ```
 #include <sys/socket.h>
@@ -35,5 +41,11 @@ main(int argc, char *argv[])
 }
 ```
 
+To test this:
+```bash
+make -C examples/ && sudo ./examples/dump_ip
+```
+
 ### API
 
+See https://github.com/looran/libpcapev/blob/master/pcapev.h
