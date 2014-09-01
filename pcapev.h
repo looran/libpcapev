@@ -15,6 +15,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifndef _LIBPCAPEV_H_
+#define _LIBPCAPEV_H_
+
 #include <netinet/if_ether.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -88,3 +91,5 @@ void		 pcapev_addcb_udp(struct pcapev *cap,
 			int (*)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *));
 void		 pcapev_addcb_icmp(struct pcapev *cap,
 			int (*)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *));
+
+#endif /* _LIBPCAPEV_H_ */
