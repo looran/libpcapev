@@ -25,7 +25,11 @@
 #include <netinet/ip_icmp.h>
 #include <pcap.h>
 
-#include "queue.h"
+#if defined(__OpenBSD__)
+#include <sys/queue.h>
+#else
+#include <bsd/sys/queue.h>
+#endif
 
 #define PCAPEV_PROMISC 1
 #define PCAPEV_NOPROMISC 0
