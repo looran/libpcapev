@@ -98,8 +98,7 @@ pcapev_new(struct event_base *ev_base,
 	if (!iface)
 		ERR_RETURN(NULL, "On OpenBSD you cannot listen on ANY interface");
 #endif
-	// XXX not clear why i have to use a timeout here
-	pcap = _my_pcap_open_live(iface, snaplen, promisc, 300, errbuf, -1, 0);
+	pcap = _my_pcap_open_live(iface, snaplen, promisc, -1, errbuf, -1, 0);
 	if (!pcap)
 		ERR_RETURN(NULL, "pcap_open_live failed on interface %s with snaplen %d : %s\n",
 				iface, snaplen, errbuf);
@@ -114,7 +113,6 @@ pcapev_new(struct event_base *ev_base,
 
 	cap->handler = _phandler_lookup(pcap_datalink(pcap));
 	pcap_setnonblock(pcap, 1, errbuf);
-	//pcap_set_buffer_size(pcap, 100000);
 	cap->pcap = pcap;
 	cap->ev = event_new(ev_base, pcap_get_selectable_fd(pcap), EV_READ|EV_PERSIST,
 			_cb_pcap, cap);
@@ -126,7 +124,16 @@ pcapev_new(struct event_base *ev_base,
 int
 pcapev_start(struct pcapev *cap)
 {
-	return event_add(cap->ev, NULL);
+/* #if __APPLE__ && __MACH__
+	struct timeval	tv[1] = {{0, 200000}};
+#else
+	struct timeval	*tv = NULL;
+#endif */
+	/* XXX we loose less packets when setting a timeout, even on linux ... */
+	struct timeval	tv[1] = {{0, 100000}};
+	//struct timeval	*tv = NULL;
+
+	return event_add(cap->ev, tv);
 }
 
 void
@@ -345,7 +352,8 @@ _cb_pcap(int fd, short why, void *data)
 	struct pcapev *cap;
 
 	cap = data;
-	while (!pcap_dispatch(cap->pcap, 1, cap->handler, (u_char *)cap));
+	LOG_DEBUG("_cb_pcap\n");
+	pcap_dispatch(cap->pcap, 100, cap->handler, (u_char *)cap);
 }
 
 static pcap_handler
