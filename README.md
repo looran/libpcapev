@@ -12,7 +12,7 @@ libpcapev - libpcap helper using libevent
 #include <pcapev.h>
 
 static int
-_cb_ip(struct pcapev *cap, struct ip *ip, int len, struct ether_header *ether)
+_cb_ip(struct pcapev *cap, struct ip *ip, int len, struct ether_header *ether, void *arg)
 {
 	printf("%s\t -> ", inet_ntoa(ip->ip_src));
 	printf("%s    (%x)\n", inet_ntoa(ip->ip_dst), ip->ip_p);
@@ -26,12 +26,13 @@ main(int argc, char *argv[])
 
 	evb = event_base_new();
 
-	cap = pcapev_new(evb, "any", 100, PCAPEV_PROMISC, PCAPEV_NOFILTER, PCAPEV_NOVERBOSE);
-	pcapev_addcb_ip(cap, _cb_ip);
+	cap = pcapev_new(evb, "any", PCAPEV_SNAPLEN_DEFAULT, PCAPEV_NOPROMISC, PCAPEV_NOFILTER, PCAPEV_NOVERBOSE);
+	pcapev_addcb_ip(cap, _cb_ip, NULL);
 	pcapev_start(cap);
 
 	event_base_dispatch(evb);
 	pcapev_free(cap);
+	return 0;
 }
 ```
 
