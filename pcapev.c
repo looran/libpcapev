@@ -638,7 +638,7 @@ _ip(struct pcapev *cap, struct ip *ip, const u_char *pend, u_int wirelen,
 				break;
 
 			default:
-				LOG("user: unknown ip protocol !\n");
+				LOG_DEBUG("user: unknown ip protocol %x !\n", ip->ip_p);
 				break;
 		}
 	} else {
