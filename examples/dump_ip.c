@@ -26,4 +26,5 @@ main(int argc, char *argv[])
 
 	event_base_dispatch(evb);
 	pcapev_free(cap);
+	return 0;
 }
