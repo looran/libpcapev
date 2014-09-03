@@ -57,25 +57,26 @@ struct pcapev_cb {
 	LIST_ENTRY(pcapev_cb) entry;
 	union {
 		struct {
-			int (*func)(struct pcapev *, struct ether_header *, int);
+			int (*func)(struct pcapev *, struct ether_header *, int, void *);
 		} ether;
 		struct {
-			int (*func)(struct pcapev *, struct arphdr *, int, struct ether_header *);
+			int (*func)(struct pcapev *, struct arphdr *, int, struct ether_header *, void *);
 		} arp;
 		struct {
-			int (*func)(struct pcapev *, struct ip *, int, struct ether_header *);
+			int (*func)(struct pcapev *, struct ip *, int, struct ether_header *, void *);
 		} ip;
 		struct {
-			int (*func)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *);
+			int (*func)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *, void *);
 			int flags;
 		} tcp;
 		struct {
-			int (*func)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *);
+			int (*func)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *, void *);
 		} udp;
 		struct {
-			int (*func)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *);
+			int (*func)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *, void *);
 		} icmp;
 	} cb;
+	void *arg;
 };
 
 struct pcapev	*pcapev_new(struct event_base *ev_base, char *iface, int snaplen, int promisc, char *filter, int verbose);
@@ -84,16 +85,22 @@ void		 pcapev_stop(struct pcapev *cap);
 void		 pcapev_free(struct pcapev *cap);
 
 void		 pcapev_addcb_ether(struct pcapev *cap,
-			int (*)(struct pcapev *, struct ether_header *, int));
+			int (*)(struct pcapev *, struct ether_header *, int, void *),
+			void *);
 void		 pcapev_addcb_arp(struct pcapev *cap,
-			int (*)(struct pcapev *, struct arphdr *, int, struct ether_header *));
+			int (*)(struct pcapev *, struct arphdr *, int, struct ether_header *, void *),
+			void *);
 void		 pcapev_addcb_ip(struct pcapev *cap,
-			int (*)(struct pcapev *, struct ip *, int, struct ether_header *));
+			int (*)(struct pcapev *, struct ip *, int, struct ether_header *, void *),
+			void *);
 void		 pcapev_addcb_tcp(struct pcapev *cap, int flags,
-			int (*)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *));
+			int (*)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *, void *),
+			void *);
 void		 pcapev_addcb_udp(struct pcapev *cap,
-			int (*)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *));
+			int (*)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *, void *),
+			void *);
 void		 pcapev_addcb_icmp(struct pcapev *cap,
-			int (*)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *));
+			int (*)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *, void *),
+			void *);
 
 #endif /* _LIBPCAPEV_H_ */

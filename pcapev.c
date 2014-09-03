@@ -142,37 +142,44 @@ pcapev_free(struct pcapev *cap)
 }
 
 void pcapev_addcb_ether(struct pcapev *cap,
-			int (*func)(struct pcapev *, struct ether_header *, int))
+			int (*func)(struct pcapev *, struct ether_header *, int, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
 	cbusr = calloc(1, sizeof(struct pcapev_cb));
 	cbusr->cb.ether.func = func;
 	LIST_INSERT_HEAD(&cap->cbusr_ether, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 void pcapev_addcb_arp(struct pcapev *cap,
-			int (*func)(struct pcapev *, struct arphdr *, int, struct ether_header *))
+			int (*func)(struct pcapev *, struct arphdr *, int, struct ether_header *, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
 	cbusr = calloc(1, sizeof(struct pcapev_cb));
 	cbusr->cb.arp.func = func;
 	LIST_INSERT_HEAD(&cap->cbusr_arp, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 void pcapev_addcb_ip(struct pcapev *cap,
-			int (*func)(struct pcapev *, struct ip *, int, struct ether_header *))
+			int (*func)(struct pcapev *, struct ip *, int, struct ether_header *, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
 	cbusr = calloc(1, sizeof(struct pcapev_cb));
 	cbusr->cb.ip.func = func;
 	LIST_INSERT_HEAD(&cap->cbusr_ip, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 void pcapev_addcb_tcp(struct pcapev *cap, int flags,
-			int (*func)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *))
+			int (*func)(struct pcapev *, struct tcphdr *, int, struct ip *, struct ether_header *, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
@@ -180,26 +187,31 @@ void pcapev_addcb_tcp(struct pcapev *cap, int flags,
 	cbusr->cb.tcp.func = func;
 	cbusr->cb.tcp.flags = flags;
 	LIST_INSERT_HEAD(&cap->cbusr_tcp, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 void pcapev_addcb_udp(struct pcapev *cap,
-			int (*func)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *))
+			int (*func)(struct pcapev *, struct udphdr *, int, struct ip *, struct ether_header *, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
 	cbusr = calloc(1, sizeof(struct pcapev_cb));
 	cbusr->cb.udp.func = func;
 	LIST_INSERT_HEAD(&cap->cbusr_udp, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 void pcapev_addcb_icmp(struct pcapev *cap,
-			int (*func)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *))
+			int (*func)(struct pcapev *, struct icmphdr *, int, struct ip *, struct ether_header *, void *),
+			void *arg)
 {
 	struct pcapev_cb *cbusr;
 
 	cbusr = calloc(1, sizeof(struct pcapev_cb));
 	cbusr->cb.icmp.func = func;
 	LIST_INSERT_HEAD(&cap->cbusr_icmp, cbusr, entry);
+	cbusr->arg = arg;
 }
 
 /*
@@ -470,7 +482,7 @@ _ether(struct pcapev *cap, struct ether_header *ether, const u_char *pend, u_int
 	struct pcapev_cb *cbusr;
 
 	LIST_FOREACH(cbusr, &cap->cbusr_ether, entry)
-		cbusr->cb.ether.func(cap, ether, wirelen);
+		cbusr->cb.ether.func(cap, ether, wirelen, cbusr->arg);
 	wirelen -= sizeof(struct ether_header);
 
 	ether_type = ntohs(ether->ether_type);
@@ -488,21 +500,30 @@ _ether(struct pcapev *cap, struct ether_header *ether, const u_char *pend, u_int
 					break;
 				LOG_DEBUG("_ether: ARP\n");
 				arp = (struct arphdr *)((u_char *)ether + sizeof(struct ether_header));
-				if (NOTCAPTURED(arp)) {
-					LOG_PINVALID("arp truncated !\n");
-					return;
-				}
-				if (NOTRECEIVED(*arp)) {
-					LOG_PINVALID("arp too small !\n");
-				}
-				LIST_FOREACH(cbusr, &cap->cbusr_arp, entry)
-					cbusr->cb.arp.func(cap, arp, wirelen, ether);
-				
+				_arp(cap, arp, pend, wirelen, ether);
+				break;
 			default:
 				LOG_DEBUG("loop non ip packet !\n");
 				break;
 		}
 	}
+}
+
+static void
+_arp(struct pcapev *cap, struct arphdr *arp, const u_char *pend, u_int wirelen,
+	struct ether_header *ether)
+{
+	struct pcapev_cb *cbusr;
+
+	if (NOTCAPTURED(arp)) {
+		LOG_PINVALID("arp truncated !\n");
+		return;
+	}
+	if (NOTRECEIVED(*arp)) {
+		LOG_PINVALID("arp too small !\n");
+	}
+	LIST_FOREACH(cbusr, &cap->cbusr_arp, entry)
+		cbusr->cb.arp.func(cap, arp, wirelen, ether, cbusr->arg);
 }
 
 /*
@@ -549,7 +570,7 @@ _ip(struct pcapev *cap, struct ip *ip, const u_char *pend, u_int wirelen,
 		return;
 	}
 	LIST_FOREACH(cbusr, &cap->cbusr_ip, entry)
-		cbusr->cb.ip.func(cap, ip, len, ether);
+		cbusr->cb.ip.func(cap, ip, len, ether, cbusr->arg);
 	len -= ip_hlen;
 
 	off = ntohs(ip->ip_off);
@@ -573,7 +594,7 @@ _ip(struct pcapev *cap, struct ip *ip, const u_char *pend, u_int wirelen,
 				}
 				LIST_FOREACH(cbusr, &cap->cbusr_tcp, entry)
 					if (!cbusr->cb.tcp.flags || cbusr->cb.tcp.flags == tcph->th_flags)
-						cbusr->cb.tcp.func(cap, tcph, len, ip, ether);
+						cbusr->cb.tcp.func(cap, tcph, len, ip, ether, cbusr->arg);
 				break;
 
 			case IPPROTO_UDP:
@@ -593,7 +614,7 @@ _ip(struct pcapev *cap, struct ip *ip, const u_char *pend, u_int wirelen,
 					return;
 				}
 				LIST_FOREACH(cbusr, &cap->cbusr_udp, entry)
-					cbusr->cb.udp.func(cap, udph, len, ip, ether);
+					cbusr->cb.udp.func(cap, udph, len, ip, ether, cbusr->arg);
 				break;
 
 			case IPPROTO_ICMP:
@@ -606,7 +627,7 @@ _ip(struct pcapev *cap, struct ip *ip, const u_char *pend, u_int wirelen,
 					return;
 				}
 				LIST_FOREACH(cbusr, &cap->cbusr_icmp, entry)
-					cbusr->cb.icmp.func(cap, icmp, len, ip, ether);
+					cbusr->cb.icmp.func(cap, icmp, len, ip, ether, cbusr->arg);
 				break;
 
 			default:
