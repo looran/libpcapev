@@ -31,6 +31,7 @@
 #include <bsd/sys/queue.h>
 #endif
 
+#define PCAPEV_SNAPLEN_DEFAULT 64
 #define PCAPEV_PROMISC 1
 #define PCAPEV_NOPROMISC 0
 #define PCAPEV_NOFILTER NULL

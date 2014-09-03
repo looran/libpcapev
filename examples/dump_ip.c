@@ -20,7 +20,7 @@ main(int argc, char *argv[])
 
 	evb = event_base_new();
 
-	cap = pcapev_new(evb, "any", 100, PCAPEV_PROMISC, PCAPEV_NOFILTER, PCAPEV_NOVERBOSE);
+	cap = pcapev_new(evb, "any", PCAPEV_SNAPLEN_DEFAULT, PCAPEV_NOPROMISC, PCAPEV_NOFILTER, PCAPEV_NOVERBOSE);
 	pcapev_addcb_ip(cap, _cb_ip, NULL);
 	pcapev_start(cap);
 
