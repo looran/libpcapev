@@ -66,6 +66,7 @@ static void		_phandler_loop(u_char *, const struct pcap_pkthdr *, const u_char *
 static void		_phandler_sll(u_char *, const struct pcap_pkthdr *, const u_char *);
 #endif
 static void		_ether(struct pcapev *, struct ether_header *, const u_char *, u_int);
+static void		_arp(struct pcapev *, struct arphdr *, const u_char *, u_int, struct ether_header *);
 static void		_ip(struct pcapev *, struct ip *, const u_char *, u_int, struct ether_header *);
 
 static struct phandler phandlers[] = {
@@ -397,9 +398,9 @@ static void
 _phandler_sll(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
 {
 	struct pcapev *cap;
+	struct sll_header *sll;
+	struct arphdr *arp;
 	struct ip *ip;
-	struct ether_header *ep;
-	u_int family;
 	const u_char *pend;
 	u_int	len;
 
@@ -411,21 +412,27 @@ _phandler_sll(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
 
 	pend = p + h->caplen;
 	len = h->len - SLL_HDR_LEN;
+	sll = (struct sll_header *)p;
 
-	family = ntohs(p[14]);
-	if (family < 1536) { /* linux and wireshark are good for you */
-		switch (family) {
-			case LINUX_SLL_P_ETHERNET:
-				ep = (struct ether_header *)((u_char *)p + SLL_HDR_LEN);
-				_ether(cap, ep, pend, len);
-			default:
-				LOG_DEBUG("unknown family %x !\n", family);
+	LOG_DEBUG("_phandler_sll: sll_pkttype=%x sll_protocol=%x\n", ntohs(sll->sll_pkttype), ntohs(sll->sll_protocol));
+	switch (ntohs(sll->sll_protocol)) {
+		case ETHERTYPE_IP:
+			LOG_DEBUG("_ether: IP\n");
+			ip = (struct ip *)(p + sizeof(struct sll_header));
+			_ip(cap, ip, pend, len, NULL);
+			break;
+		case ETHERTYPE_ARP:
+			if (LIST_EMPTY(&cap->cbusr_arp))
 				break;
-		}
-	} else {
-		ip = (struct ip *)(p + SLL_HDR_LEN);
-		_ip(cap, ip, pend, len, NULL);
+			LOG_DEBUG("_ether: ARP\n");
+			arp = (struct arphdr *)(p + sizeof(struct sll_header));
+			_arp(cap, arp, pend, len, NULL);
+			break;
+		default:
+			LOG_DEBUG("loop non ip packet !\n");
+			break;
 	}
+
 }
 #endif /* __linux__ */
 
