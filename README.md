@@ -1,12 +1,6 @@
 libpcapev - libpcap helper using libevent
 =========================================
 
-### Install
-
-```bash
-make && sudo make install
-```
-
 ### Example: capture IP packets on any interfaces
 
 ```
@@ -45,6 +39,18 @@ To test this:
 ```bash
 make -C examples/ && sudo ./examples/dump_ip
 ```
+
+### Install
+
+```bash
+make && sudo make install
+```
+
+### Dependencies
+
+* libpcap
+* libevent
+* libbsd
 
 ### API
 
