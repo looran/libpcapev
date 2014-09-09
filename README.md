@@ -51,7 +51,6 @@ make && sudo make install
 
 * libpcap
 * libevent
-* libbsd (only at compile time for queue.h)
 
 ### API
 
