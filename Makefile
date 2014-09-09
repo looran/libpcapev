@@ -1,8 +1,8 @@
 CFLAGS += -Wall -fPIC
-PREFIX?=/usr/local
-INCLUDEDIR=$(DESTDIR)$(PREFIX)/include
-LIBDIR=$(DESTDIR)$(PREFIX)/lib
-LIBNAME=libpcapev
+PREFIX ?= /usr
+INCLUDEDIR = $(DESTDIR)$(PREFIX)/include
+LIBDIR  = $(DESTDIR)$(PREFIX)/lib
+LIBNAME = libpcapev
 
 TARGET_SHARED = ${LIBNAME}.so
 TARGET_STATIC = ${LIBNAME}.a
