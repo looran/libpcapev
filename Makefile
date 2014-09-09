@@ -1,8 +1,8 @@
 CFLAGS += -Wall -fPIC
 
 PREFIX=/usr/local
-INCLUDEDIR=$(PREFIX)/include
-LIBDIR=$(PREFIX)/lib
+INCLUDEDIR=$(DESTDIR)$(PREFIX)/include
+LIBDIR=$(DESTDIR)$(PREFIX)/lib
 LIBNAME=libpcapev
 
 TARGET  = ${LIBNAME}.so
